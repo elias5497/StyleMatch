@@ -472,7 +472,7 @@
       <div class="upload-icon" id="uploadIcon">📸</div>
       <p class="upload-title" id="uploadTitle">Upload your photo</p>
       <p class="upload-sub" id="uploadSub">Drop a clear, front-facing selfie here<br>or click to browse · JPG, PNG, WEBP</p>
-      <input type="file" id="fileInput" accept="image/*" />
+      <input type="file" id="fileInput" accept="image/*" onclick="event.stopPropagation()" />
     </div>
     <button class="analyze-btn" id="analyzeBtn" onclick="analyzeImage()">Analyse My Face Shape →</button>
     <div class="error-msg" id="errorMsg"></div>
@@ -491,7 +491,6 @@
   </div>
 </section>
 
-<!-- RESULTS -->
 <section id="results">
   <div class="results-header">
     <div class="face-shape-badge" id="faceShapeBadge">Oval Face</div>
@@ -611,24 +610,19 @@ Be specific and genuinely helpful. If the image does not contain a clear face, s
         body: JSON.stringify({
           contents: [{
             parts: [
-              { inline_data: { mime_type: mediaType, data: base64Data } },
+              { inlineData: { mimeType: mediaType, data: base64Data } },
               { text: prompt }
             ]
           }],
-          generationConfig: { maxOutputTokens: 1000, temperature: 0.4 }
+          generationConfig: { maxOutputTokens: 1000, temperature: 0.4, responseMimeType: "application/json" }
         })
       }
     );
 
-    //const response = await fetch('/api/gemini', { ... });
-
-// ADD THIS ↓
-if (!response.ok) {
-  const errBody = await response.text();
-  throw new Error(`${response.status} ${response.statusText}: ${errBody}`);
-}
-
-//const data = await response.json();
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`${response.status} ${response.statusText}: ${errBody}`);
+    }
 
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
@@ -643,25 +637,26 @@ if (!response.ok) {
     renderResults(analysisData);
 
   } catch (err) {
-  loadingState.style.display = 'none';
-  analyzeBtn.style.display = 'block';
+    loadingState.style.display = 'none';
+    analyzeBtn.style.display = 'block';
 
-  let msg = 'Something went wrong. ';
-  if (err.message.includes('404')) {
-    msg += 'API route not found — check your Vercel deployment.';
-  } else if (err.message.includes('API key') || err.message.includes('403')) {
-    msg += 'Invalid or missing Gemini API key.';
-  } else if (err.message.includes('No response')) {
-    msg += 'AI returned no content — try a clearer, front-facing photo.';
-  } else if (err.message.includes('JSON')) {
-    msg += 'Unexpected response format from AI. Try again.';
-  } else {
-    msg += err.message || 'Unknown error. Check the console for details.';
+    let msg = 'Something went wrong. ';
+    if (err.message.includes('404')) {
+      msg += 'API route not found — check your Vercel deployment.';
+    } else if (err.message.includes('API key') || err.message.includes('403')) {
+      msg += 'Invalid or missing Gemini API key.';
+    } else if (err.message.includes('No response')) {
+      msg += 'AI returned no content — try a clearer, front-facing photo.';
+    } else if (err.message.includes('JSON')) {
+      msg += 'Unexpected response format from AI. Try again.';
+    } else {
+      msg += err.message || 'Unknown error. Check the console for details.';
+    }
+
+    errorMsg.textContent = msg;
+    errorMsg.style.display = 'block';
+    console.error('[StyleMatch Error]', err);
   }
-
-  errorMsg.textContent = msg;
-  errorMsg.style.display = 'block';
-  console.error('[StyleMatch Error]', err);
 }
 
 function renderResults(data) {
