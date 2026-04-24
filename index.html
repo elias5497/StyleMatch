@@ -619,10 +619,13 @@ Be specific and genuinely helpful. If the image does not contain a clear face, s
       }
     );
 
-    if (!response.ok) {
-      const errBody = await response.text();
-      throw new Error(`${response.status} ${response.statusText}: ${errBody}`);
-    }
+    catch (err) {
+  loadingState.style.display = 'none';
+  analyzeBtn.style.display = 'block';
+  errorMsg.textContent = err.message;
+  errorMsg.style.display = 'block';
+  console.error('[StyleMatch Error]', err);
+}
 
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
