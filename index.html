@@ -620,7 +620,7 @@ Be specific and genuinely helpful. If the image does not contain a clear face, s
       }
     );
 
-    const response = await fetch('/api/gemini', { ... });
+    //const response = await fetch('/api/gemini', { ... });
 
 // ADD THIS ↓
 if (!response.ok) {
@@ -628,7 +628,7 @@ if (!response.ok) {
   throw new Error(`${response.status} ${response.statusText}: ${errBody}`);
 }
 
-const data = await response.json();
+//const data = await response.json();
 
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
