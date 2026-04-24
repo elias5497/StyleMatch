@@ -620,6 +620,16 @@ Be specific and genuinely helpful. If the image does not contain a clear face, s
       }
     );
 
+    const response = await fetch('/api/gemini', { ... });
+
+// ADD THIS ↓
+if (!response.ok) {
+  const errBody = await response.text();
+  throw new Error(`${response.status} ${response.statusText}: ${errBody}`);
+}
+
+const data = await response.json();
+
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
 
@@ -633,12 +643,25 @@ Be specific and genuinely helpful. If the image does not contain a clear face, s
     renderResults(analysisData);
 
   } catch (err) {
-    loadingState.style.display = 'none';
-    analyzeBtn.style.display = 'block';
-    errorMsg.textContent = 'Something went wrong analysing your image. Please try again with a clear, front-facing photo.';
-    errorMsg.style.display = 'block';
-    console.error(err);
+  loadingState.style.display = 'none';
+  analyzeBtn.style.display = 'block';
+
+  let msg = 'Something went wrong. ';
+  if (err.message.includes('404')) {
+    msg += 'API route not found — check your Vercel deployment.';
+  } else if (err.message.includes('API key') || err.message.includes('403')) {
+    msg += 'Invalid or missing Gemini API key.';
+  } else if (err.message.includes('No response')) {
+    msg += 'AI returned no content — try a clearer, front-facing photo.';
+  } else if (err.message.includes('JSON')) {
+    msg += 'Unexpected response format from AI. Try again.';
+  } else {
+    msg += err.message || 'Unknown error. Check the console for details.';
   }
+
+  errorMsg.textContent = msg;
+  errorMsg.style.display = 'block';
+  console.error('[StyleMatch Error]', err);
 }
 
 function renderResults(data) {
